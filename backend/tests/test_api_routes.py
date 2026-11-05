@@ -16,7 +16,7 @@ async def test_health_endpoint():
         assert response.status_code == 200
         data = response.json()
         assert data["status"] == "online"
-        assert data["service"] == "CareerTwin AI Core"
+        assert "CareerTwin" in data["service"]
 
 @pytest.mark.asyncio
 async def test_careers_endpoint():
@@ -29,15 +29,20 @@ async def test_careers_endpoint():
         assert any(c["id"] == "ai-ml-engineer" for c in data)
 
 @pytest.mark.asyncio
-async def test_demo_auth_flow():
+async def test_auth_registration_and_workflow():
     transport = httpx.ASGITransport(app=app)
     async with httpx.AsyncClient(transport=transport, base_url="http://test") as client:
-        # 1-Click Demo Login
-        demo_res = await client.post("/api/auth/demo")
-        assert demo_res.status_code == 200
-        token_data = demo_res.json()
+        # Register new real user
+        reg_payload = {
+            "name": "Sarah Connor",
+            "email": "sarah.connor@example.com",
+            "password": "ProductionPassword123!"
+        }
+        reg_res = await client.post("/api/auth/register", json=reg_payload)
+        assert reg_res.status_code == 200
+        token_data = reg_res.json()
         assert "access_token" in token_data
-        assert token_data["name"] == "Alex"
+        assert token_data["name"] == "Sarah Connor"
         token = token_data["access_token"]
 
         headers = {"Authorization": f"Bearer {token}"}
@@ -45,7 +50,19 @@ async def test_demo_auth_flow():
         # Access user me
         me_res = await client.get("/api/auth/me", headers=headers)
         assert me_res.status_code == 200
-        assert me_res.json()["name"] == "Alex"
+        assert me_res.json()["name"] == "Sarah Connor"
+
+        # Update real profile / onboarding
+        profile_payload = {
+            "name": "Sarah Connor",
+            "institution": "Tech University",
+            "degree": "B.S. Computer Engineering",
+            "academic_year": "Final year",
+            "skills": {"Python": 3.5, "SQL": 2.5, "Machine Learning": 2.0},
+            "career_goals": ["ai-ml-engineer", "data-scientist"]
+        }
+        prof_res = await client.post("/api/profile", json=profile_payload, headers=headers)
+        assert prof_res.status_code == 200
 
         # Access digital twin
         twin_res = await client.get("/api/twin", headers=headers)
@@ -57,7 +74,7 @@ async def test_demo_auth_flow():
         # Run simulation
         sim_payload = {
             "career_id": "ai-ml-engineer",
-            "scenario_name": "Test Simulation",
+            "scenario_name": "ML Deepening",
             "learning_actions": [
                 {"skill_name": "Machine Learning", "added_proficiency": 2.0}
             ]

@@ -30,14 +30,6 @@ async def get_current_user(credentials: HTTPAuthorizationCredentials = Depends(s
 
     user = await db.get_collection("users").find_one({"_id": user_id})
     if not user:
-        # Check if user_id is the demo user
-        if user_id == "demo-user-alex":
-            return {
-                "_id": "demo-user-alex",
-                "id": "demo-user-alex",
-                "email": "alex@careertwin.ai",
-                "name": "Alex"
-            }
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
             detail="User not found."

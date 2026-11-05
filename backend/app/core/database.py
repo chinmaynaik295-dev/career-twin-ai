@@ -6,7 +6,7 @@ from app.core.config import settings
 
 logger = logging.getLogger(__name__)
 
-# Fallback In-Memory Async Data Store for local demo mode
+# Fallback In-Memory Async Data Store for resilient local operation
 class MemoryCollection:
     def __init__(self, name: str):
         self.name = name
@@ -128,11 +128,11 @@ class Database:
                 logger.info(f"Connected to MongoDB Atlas: {settings.DATABASE_NAME}")
                 return
             except Exception as e:
-                logger.warning(f"Could not connect to MongoDB Atlas ({e}). Falling back to Local Demo Database.")
+                logger.warning(f"Could not connect to MongoDB Atlas ({e}). Falling back to Local Resilient Database.")
         
         self.is_mock = True
         self.is_connected = True
-        logger.info("Operating in Local Demo Mode with resilient in-memory database store.")
+        logger.info("Operating in Local Resilient Store Mode with in-memory database store.")
 
     def get_collection(self, name: str):
         if not self.is_mock and self.db is not None:
@@ -142,3 +142,4 @@ class Database:
         return self.collections[name]
 
 db = Database()
+

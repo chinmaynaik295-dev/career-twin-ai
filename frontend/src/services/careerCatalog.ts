@@ -1,0 +1,178 @@
+import { CareerPath } from '../types';
+
+export const CAREER_TRACKS_CATALOG: CareerPath[] = [
+  {
+    id: "ai-ml-engineer",
+    title: "AI/ML Engineer",
+    tagline: "Architect intelligent systems, neural networks, and generative AI pipelines",
+    description: "Designs, builds, and deploys machine learning models and deep neural networks to solve complex predictive and generative problems.",
+    category: "Artificial Intelligence",
+    market_outlook: "High Growth (+38% projected demand)",
+    average_salary_range: "$125,000 - $185,000",
+    required_skills: [
+      { name: "Python", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Core language for ML workflows, scripting, and scientific computing" },
+      { name: "Machine Learning", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 4, description: "Supervised, unsupervised models, feature engineering, and evaluation" },
+      { name: "Mathematics", category: "technical", importance: 4, min_proficiency: 3, target_proficiency: 4, description: "Linear algebra, multivariate calculus, probability, and statistics" },
+      { name: "SQL", category: "technical", importance: 3, min_proficiency: 2, target_proficiency: 3, description: "Relational data extraction, transformations, and querying" },
+      { name: "Deep Learning & PyTorch", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Neural network architectures (CNNs, Transformers) and tensor computing" },
+      { name: "MLOps & Model Deployment", category: "technical", importance: 3, min_proficiency: 2, target_proficiency: 4, description: "FastAPI model serving, containerization, and model monitoring" },
+      { name: "Problem Solving", category: "soft", importance: 4, min_proficiency: 3, target_proficiency: 5, description: "Algorithmic thinking and troubleshooting non-convergent systems" },
+      { name: "Communication", category: "soft", importance: 3, min_proficiency: 2, target_proficiency: 4, description: "Explaining ML model metrics and trade-offs to stakeholders" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-ai-1",
+        title: "Autonomous Agent with Tool Calling & RAG",
+        description: "Build an agentic assistant that indexes technical documentation, plans multistep workflows, and invokes external search tools.",
+        difficulty: "Intermediate",
+        estimated_hours: 35,
+        skills_targeted: ["Python", "Machine Learning", "MLOps & Model Deployment"]
+      },
+      {
+        id: "proj-ai-2",
+        title: "End-to-End Predictive Telemetry Pipeline",
+        description: "Train an anomaly detection model on time-series telemetry data and serve real-time predictions via an async API.",
+        difficulty: "Advanced",
+        estimated_hours: 45,
+        skills_targeted: ["Machine Learning", "Mathematics", "SQL", "MLOps & Model Deployment"]
+      }
+    ]
+  },
+  {
+    id: "cybersecurity-engineer",
+    title: "Cybersecurity Engineer",
+    tagline: "Protect infrastructure, conduct threat modeling, and fortify digital perimeters",
+    description: "Safeguards networks, cloud environments, and application architectures against vulnerabilities, breaches, and adversarial attacks.",
+    category: "Security & Defense",
+    market_outlook: "Critical Demand (+32% projected growth)",
+    average_salary_range: "$115,000 - $170,000",
+    required_skills: [
+      { name: "Networking", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "TCP/IP, routing protocols, firewalls, and packet-level inspection" },
+      { name: "Linux", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 4, description: "Kernel architecture, shell scripting, permission models, system hardening" },
+      { name: "Cybersecurity", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Threat modeling, cryptography, vulnerability assessment, OWASP Top 10" },
+      { name: "Python", category: "technical", importance: 3, min_proficiency: 2, target_proficiency: 4, description: "Security tooling, automation, and log parsing" },
+      { name: "Security Auditing & SIEM", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Log ingestion, anomaly detection, incident response, and compliance" },
+      { name: "Problem Solving", category: "soft", importance: 4, min_proficiency: 3, target_proficiency: 5, description: "Root-cause incident forensics and proactive defensive triage" },
+      { name: "Ethical Judgment", category: "soft", importance: 5, min_proficiency: 4, target_proficiency: 5, description: "Adhering to strict compliance and ethical security research practices" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-sec-1",
+        title: "Automated Vulnerability Scanner & SIEM Alert Hub",
+        description: "Develop a lightweight network port scanner and log analysis dashboard that correlates authentication anomalies.",
+        difficulty: "Intermediate",
+        estimated_hours: 30,
+        skills_targeted: ["Networking", "Linux", "Cybersecurity", "Python"]
+      }
+    ]
+  },
+  {
+    id: "data-scientist",
+    title: "Data Scientist",
+    tagline: "Uncover behavioral patterns, build statistical simulations, and derive strategic intelligence",
+    description: "Applies statistical modeling, hypothesis testing, and machine learning to analyze large datasets and guide strategic decisions.",
+    category: "Data & Analytics",
+    market_outlook: "High Demand (+35% projected growth)",
+    average_salary_range: "$110,000 - $165,000",
+    required_skills: [
+      { name: "Python", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Data manipulation with Pandas, NumPy, and statistical packages" },
+      { name: "SQL", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Complex aggregations, window functions, and query optimization" },
+      { name: "Mathematics", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 4, description: "Bayesian statistics, hypothesis testing, regression analysis" },
+      { name: "Machine Learning", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Clustering, dimensionality reduction, ensemble trees, evaluation" },
+      { name: "Data Visualization", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Communicating findings through interactive analytical dashboards" },
+      { name: "Communication", category: "soft", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Translating statistical findings into executive business strategy" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-ds-1",
+        title: "Customer Churn Prediction with Explainable AI",
+        description: "Build an end-to-end churn model using XGBoost and SHAP values with an interactive visualization dashboard.",
+        difficulty: "Intermediate",
+        estimated_hours: 28,
+        skills_targeted: ["Python", "SQL", "Machine Learning", "Data Visualization"]
+      }
+    ]
+  },
+  {
+    id: "software-developer",
+    title: "Software Developer",
+    tagline: "Engineer robust applications, modular APIs, and scalable distributed architectures",
+    description: "Designs, codes, tests, and maintains full-stack software applications and services.",
+    category: "Software Engineering",
+    market_outlook: "Stable High (+25% projected growth)",
+    average_salary_range: "$105,000 - $160,000",
+    required_skills: [
+      { name: "Python", category: "technical", importance: 4, min_proficiency: 3, target_proficiency: 4, description: "Backend API development, object-oriented design, async execution" },
+      { name: "C", category: "technical", importance: 3, min_proficiency: 2, target_proficiency: 3, description: "Memory management, system-level execution, data structures" },
+      { name: "SQL", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Schema design, normalization, transactions, query optimization" },
+      { name: "Web Technologies", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "REST APIs, HTTP protocols, TypeScript/React frontend integration" },
+      { name: "Problem Solving", category: "soft", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Algorithmic design, debugging, code review, design patterns" },
+      { name: "Team Collaboration", category: "soft", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Git workflows, agile sprint execution, cross-functional communication" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-sw-1",
+        title: "Full-Stack Collaborative Workspace Application",
+        description: "Create a responsive app with real-time state synchronization, authentication, and RESTful APIs.",
+        difficulty: "Intermediate",
+        estimated_hours: 32,
+        skills_targeted: ["Python", "SQL", "Web Technologies", "Problem Solving"]
+      }
+    ]
+  },
+  {
+    id: "cloud-engineer",
+    title: "Cloud Engineer",
+    tagline: "Design resilient multi-cloud architectures, automate deployments, and optimize reliability",
+    description: "Provisions, manages, and automates scalable cloud infrastructure, container orchestrations, and DevOps pipelines.",
+    category: "Infrastructure & Cloud",
+    market_outlook: "High Demand (+30% projected growth)",
+    average_salary_range: "$120,000 - $175,000",
+    required_skills: [
+      { name: "Linux", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "System administration, server configuration, bash scripting, permissions" },
+      { name: "Networking", category: "technical", importance: 4, min_proficiency: 3, target_proficiency: 4, description: "VPCs, subnets, load balancing, CDN, DNS, and secure egress/ingress" },
+      { name: "Cloud Platforms (AWS/GCP/Azure)", category: "technical", importance: 5, min_proficiency: 2, target_proficiency: 5, description: "Compute instances, serverless, storage buckets, IAM security policies" },
+      { name: "Containers & Kubernetes", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Docker containerization, microservice orchestration, cluster management" },
+      { name: "Infrastructure as Code", category: "technical", importance: 4, min_proficiency: 1, target_proficiency: 4, description: "Terraform, Ansible, and automated environment provisioning" },
+      { name: "Problem Solving", category: "soft", importance: 4, min_proficiency: 3, target_proficiency: 4, description: "Disaster recovery, incident escalation, bottleneck identification" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-cld-1",
+        title: "Automated Multi-Region Kubernetes Microservice Cluster",
+        description: "Deploy a containerized application with Terraform, automated ingress TLS, and Prometheus monitoring.",
+        difficulty: "Advanced",
+        estimated_hours: 36,
+        skills_targeted: ["Linux", "Networking", "Cloud Platforms (AWS/GCP/Azure)", "Containers & Kubernetes"]
+      }
+    ]
+  },
+  {
+    id: "data-engineer",
+    title: "Data Engineer",
+    tagline: "Build scalable data pipelines, stream ingestion architectures, and analytical warehouses",
+    description: "Constructs robust data extraction, transformation, and loading pipelines to feed analytics and machine learning engines.",
+    category: "Data Architecture",
+    market_outlook: "High Demand (+31% projected growth)",
+    average_salary_range: "$115,000 - $170,000",
+    required_skills: [
+      { name: "Python", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Data transformation, scripting, Airflow DAG generation" },
+      { name: "SQL", category: "technical", importance: 5, min_proficiency: 3, target_proficiency: 5, description: "Complex joins, indexing, query execution planning, warehouse schemas" },
+      { name: "Distributed Computing (Spark/Kafka)", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Batch processing, real-time message streaming, partition strategies" },
+      { name: "Linux", category: "technical", importance: 3, min_proficiency: 2, target_proficiency: 3, description: "CLI automation, cron jobs, log inspection" },
+      { name: "Data Warehousing", category: "technical", importance: 4, min_proficiency: 2, target_proficiency: 4, description: "Snowflake, BigQuery, star schema modeling, data governance" },
+      { name: "Problem Solving", category: "soft", importance: 4, min_proficiency: 3, target_proficiency: 4, description: "Debugging pipeline latency, data drift, and schema mutations" }
+    ],
+    recommended_projects: [
+      {
+        id: "proj-de-1",
+        title: "Real-Time Streaming Analytics Pipeline with Kafka & Spark",
+        description: "Stream transactional events, compute sliding window metrics, and store transformed records in an analytical warehouse.",
+        difficulty: "Advanced",
+        estimated_hours: 40,
+        skills_targeted: ["Python", "SQL", "Distributed Computing (Spark/Kafka)", "Data Warehousing"]
+      }
+    ]
+  }
+];
+

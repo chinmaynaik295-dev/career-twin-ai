@@ -36,7 +36,7 @@ flowchart TD
         SimEngine["Deterministic Simulation Engine"]
         AgentOrch["Agent Orchestrator"]
         Tools["8 Agentic Tools"]
-        DBLayer["Unified DB Layer (MongoDB Atlas / In-Memory Demo)"]
+        DBLayer["Unified DB Layer (MongoDB Atlas / Resilient In-Memory Store)"]
     end
 
     API --> SimEngine
@@ -98,23 +98,23 @@ $$\text{Readiness Score} = \frac{\sum (\text{User Skill Proficiency} \times \tex
 
 ---
 
-## 🎬 Hackathon Demonstration Script (9-Scene Walkthrough)
+## 🔄 Platform Workflow & Core Capabilities
 
-- **Scene 1 (Initialization):** Click **"1-Click Demo as Alex"** on the landing page or login. Instantly logs in as Alex (2nd Year Computer Science student).
-- **Scene 2 (Digital Twin Dashboard):** Inspect Alex's Digital Twin. See live readiness (AI/ML: 41.5%, Cyber: 32.0%), multi-axis radar chart, and top competency gaps.
-- **Scene 3 (Career Explorer):** Explore requirements across 6 structured career tracks. Click **"Compare Any Two Careers"** to see side-by-side metrics.
-- **Scene 4 (Diagnostic Gap Analysis):** Open the **Skill Gaps** tab. Uncover why Machine Learning (+3.0 gap) and PyTorch (+4.0 gap) are critical bottlenecks.
-- **Scene 5 (What-If Simulation Lab):** Open the **Simulation Lab**. Add hypothetical learning actions (e.g. +2.0 Machine Learning, +2.0 SQL). Click **"Run What-If Simulation"**.
-- **Scene 6 (Scenario Comparison):** Click **"Compare Scenario A vs B"** to see AI Track (+13.5 pts) vs Cybersecurity Track (+8.5 pts).
-- **Scene 7 (Agentic AI Mentor):** Open the **AI Mentor**. Ask: *"Which career suits my current skills best?"* Watch the agent invoke `analyze_user_profile()` and provide grounded guidance.
-- **Scene 8 (Adaptive Roadmap):** Open the **Roadmap** tab. Review the 8-week structured execution schedule.
-- **Scene 9 (Twin Evolution):** Check a milestone task checkbox and submit verified project evidence. Watch the Digital Twin evolve with +0.3 proficiency boost on the **Twin Evolution** timeline.
+- **1. Account Creation & Onboarding:** Secure user registration with email and password. A 4-step wizard calibrates your education, initial skill ratings, and primary career goal.
+- **2. Live Digital Twin Dashboard:** View calculated readiness across all 6 tracks, multi-axis competency radar overlays, and prioritized skill gaps.
+- **3. Career Explorer & Benchmarking:** Benchmark your twin against industry role expectations and run side-by-side career comparisons.
+- **4. Diagnostic Gap Analysis:** Uncover priority bottlenecks (e.g., gap ≥ 2.0 with critical weighting) and suggested remediation actions.
+- **5. What-If Simulation Lab:** Add hypothetical learning actions (e.g., +2.0 Machine Learning, +2.0 SQL) and compute exact readiness score changes and estimated learning hours.
+- **6. Scenario Comparison:** Compare alternative learning decisions side-by-side (e.g., Systems vs AI Specialization) before dedicating hours.
+- **7. Agentic AI Career Mentor:** Conversational advisor grounded in your live twin metrics, capable of invoking Python tools dynamically.
+- **8. Adaptive Learning Roadmap:** Generate structured 4, 8, or 12-week milestones with verified micro-tasks.
+- **9. Verifiable Twin Evolution:** Submit proof of task completion to boost competency ratings and record timestamped audit entries.
 
 ---
 
 ## 🛠️ Quick Start & Installation
 
-### Option 1: Run Locally (Fastest)
+### Option 1: Run Locally
 
 #### Backend
 ```bash
@@ -168,6 +168,6 @@ npm run build
 - Zero hardcoded secrets in client-side code
 - PBKDF2-HMAC-SHA256 password hashing
 - Signed JWT Bearer token authentication
-- Resilient In-Memory Demo mode when cloud MongoDB is not configured
+- Resilient In-Memory database store fallback when MongoDB Atlas is offline
 - Pydantic v2 input validation on all API endpoints
 - CORS whitelist protection

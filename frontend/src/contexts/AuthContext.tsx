@@ -8,8 +8,8 @@ interface AuthContextType {
   isLoading: boolean;
   login: (email: string, pass: string) => Promise<void>;
   register: (email: string, pass: string, name: string) => Promise<void>;
-  demoLogin: () => Promise<void>;
   logout: () => void;
+  refreshUser: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -18,18 +18,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+  const refreshUser = async () => {
+    const token = localStorage.getItem('careertwin_token');
+    if (token) {
+      try {
+        const me = await api.getMe();
+        setUser(me);
+      } catch (e) {
+        localStorage.removeItem('careertwin_token');
+        setUser(null);
+      }
+    } else {
+      setUser(null);
+    }
+  };
+
   useEffect(() => {
     const initAuth = async () => {
-      const token = localStorage.getItem('careertwin_token');
-      if (token) {
-        try {
-          const me = await api.getMe();
-          setUser(me);
-        } catch (e) {
-          localStorage.removeItem('careertwin_token');
-          setUser(null);
-        }
-      }
+      await refreshUser();
       setIsLoading(false);
     };
     initAuth();
@@ -57,17 +63,6 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     }
   };
 
-  const demoLogin = async () => {
-    setIsLoading(true);
-    try {
-      const res = await api.demoLogin();
-      localStorage.setItem('careertwin_token', res.access_token);
-      setUser({ id: res.user_id, name: res.name, email: res.email });
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   const logout = () => {
     localStorage.removeItem('careertwin_token');
     setUser(null);
@@ -81,8 +76,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         isLoading,
         login,
         register,
-        demoLogin,
         logout,
+        refreshUser,
       }}
     >
       {children}

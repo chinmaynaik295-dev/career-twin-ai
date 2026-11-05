@@ -1,13 +1,13 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { CareerPath, SkillGapAnalysis, DigitalCareerTwin } from '../types';
 import { 
   Target, AlertTriangle, CheckCircle2, ChevronRight, 
-  RefreshCw, Filter, Sparkles, ArrowRight 
+  RefreshCw, Filter, Sparkles, ArrowRight, AlertCircle, Cpu
 } from 'lucide-react';
 import { RadarCompetencyChart } from '../components/charts/RadarCompetencyChart';
 import { SkillGapCard } from '../components/ui/SkillGapCard';
-import { Link } from 'react-router-dom';
 
 export const SkillGapPage: React.FC = () => {
   const [careers, setCareers] = useState<CareerPath[]>([]);
@@ -16,6 +16,7 @@ export const SkillGapPage: React.FC = () => {
   const [twin, setTwin] = useState<DigitalCareerTwin | null>(null);
   const [filterPriority, setFilterPriority] = useState<string>('all');
   const [loading, setLoading] = useState(true);
+  const [analyzing, setAnalyzing] = useState(false);
 
   useEffect(() => {
     const init = async () => {
@@ -26,7 +27,11 @@ export const SkillGapPage: React.FC = () => {
         ]);
         setCareers(careersData);
         setTwin(twinData);
-        const analysis = await api.analyzeCareer(selectedCareerId);
+        const targetId = (twinData.career_goals && twinData.career_goals.length > 0)
+          ? twinData.career_goals[0]
+          : 'ai-ml-engineer';
+        setSelectedCareerId(targetId);
+        const analysis = await api.analyzeCareer(targetId);
         setGapAnalysis(analysis);
       } catch (e) {
         console.error(e);
@@ -39,22 +44,29 @@ export const SkillGapPage: React.FC = () => {
 
   const handleCareerChange = async (careerId: string) => {
     setSelectedCareerId(careerId);
-    setLoading(true);
+    setAnalyzing(true);
     try {
       const analysis = await api.analyzeCareer(careerId);
       setGapAnalysis(analysis);
+    } catch (e) {
+      console.error(e);
     } finally {
-      setLoading(false);
+      setAnalyzing(false);
     }
   };
 
   if (loading && !gapAnalysis) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-brand-cyan animate-spin" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <RefreshCw className="w-6 h-6 text-primary-600 animate-spin" />
+          <p className="text-xs text-slate-500 font-medium">Analyzing competency differentials...</p>
+        </div>
       </div>
     );
   }
+
+  const hasConfiguredTwin = twin && Object.keys(twin.skills || {}).length > 0;
 
   const radarData = gapAnalysis?.skill_gaps.slice(0, 7).map((g) => ({
     skill: g.skill,
@@ -69,29 +81,33 @@ export const SkillGapPage: React.FC = () => {
 
   const highPriorityCount = gapAnalysis?.skill_gaps.filter(g => g.priority === 'High').length || 0;
   const mediumPriorityCount = gapAnalysis?.skill_gaps.filter(g => g.priority === 'Medium').length || 0;
+  const metCount = (gapAnalysis?.total_competencies || 0) - (highPriorityCount + mediumPriorityCount);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
+    <div className="space-y-6">
       {/* Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-surface-border">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-surface-light border border-accent-rose/30 text-rose-400 text-xs font-semibold mb-2">
-            <Target className="w-3.5 h-3.5" />
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 mb-1">
+            <Target className="w-4 h-4" />
             <span>Diagnostic Gap Analysis Engine</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Competency Gap Diagnostic</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Real mathematical comparison between your current proficiencies and industry career benchmarks
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Competency Gap Analysis</h1>
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            Quantitative assessment comparing your verified skill proficiencies against target market expectations.
           </p>
         </div>
 
         {/* Track Switcher */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs text-slate-400 font-medium">Select Career:</span>
+        <div className="flex items-center gap-2 shrink-0">
+          <label htmlFor="track-select" className="text-xs text-slate-500 font-medium">Benchmark Role:</label>
           <select
+            id="track-select"
             value={selectedCareerId}
             onChange={(e) => handleCareerChange(e.target.value)}
-            className="px-3.5 py-2 rounded-xl bg-surface border border-surface-border text-xs font-semibold text-white focus:outline-none focus:border-brand-cyan"
+            disabled={analyzing}
+            aria-label="Select benchmark role"
+            className="px-3 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-primary-500 shadow-subtle"
           >
             {careers.map((c) => (
               <option key={c.id} value={c.id}>
@@ -102,98 +118,122 @@ export const SkillGapPage: React.FC = () => {
         </div>
       </div>
 
-      {/* Summary Cards */}
+      {!hasConfiguredTwin && (
+        <div className="p-4 rounded-xl bg-amber-50 border border-amber-200 flex items-start justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-4 h-4 text-amber-700 mt-0.5 shrink-0" />
+            <div>
+              <p className="text-xs font-semibold text-amber-900">Digital Twin baseline not set</p>
+              <p className="text-xs text-amber-700 mt-0.5">
+                The current diagnostic evaluates against default base metrics. Complete onboarding to generate precise gap metrics.
+              </p>
+            </div>
+          </div>
+          <Link
+            to="/onboarding"
+            className="px-3 py-1.5 rounded-lg text-xs font-semibold bg-amber-600 hover:bg-amber-700 text-white shrink-0"
+          >
+            Calibrate Profile
+          </Link>
+        </div>
+      )}
+
+      {/* Metric Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="p-4 rounded-xl bg-surface border border-surface-border">
-          <p className="text-xs text-slate-400">Target Role Readiness</p>
-          <p className="text-2xl font-mono font-extrabold text-brand-cyan mt-1">
+        <div className="p-4 rounded-xl bg-white border border-surface-border shadow-subtle space-y-1">
+          <p className="text-xs font-medium text-slate-500">Target Role Readiness</p>
+          <p className="text-2xl font-bold font-mono text-primary-700">
             {gapAnalysis?.readiness_score}%
           </p>
-          <span className="text-[10px] text-slate-500">Transparent deterministic score</span>
+          <p className="text-[11px] text-slate-500">Calculated role benchmark</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface border border-surface-border">
-          <p className="text-xs text-slate-400">Total Competencies</p>
-          <p className="text-2xl font-mono font-extrabold text-white mt-1">
-            {gapAnalysis?.total_competencies}
+        <div className="p-4 rounded-xl bg-white border border-surface-border shadow-subtle space-y-1">
+          <p className="text-xs font-medium text-slate-500">Evaluated Competencies</p>
+          <p className="text-2xl font-bold font-mono text-slate-900">
+            {gapAnalysis?.total_competencies || 0}
           </p>
-          <span className="text-[10px] text-slate-500">Evaluated skills & traits</span>
+          <p className="text-[11px] text-slate-500">Skills & domain areas</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface border border-surface-border">
-          <p className="text-xs text-slate-400">High-Priority Bottlenecks</p>
-          <p className="text-2xl font-mono font-extrabold text-rose-400 mt-1">
+        <div className="p-4 rounded-xl bg-white border border-surface-border shadow-subtle space-y-1">
+          <p className="text-xs font-medium text-slate-500">High-Priority Bottlenecks</p>
+          <p className="text-2xl font-bold font-mono text-rose-600">
             {highPriorityCount}
           </p>
-          <span className="text-[10px] text-slate-500">Gap ≥ 2.0 & Importance ≥ 4</span>
+          <p className="text-[11px] text-slate-500">Gap ≥ 2.0 with high weight</p>
         </div>
 
-        <div className="p-4 rounded-xl bg-surface border border-surface-border">
-          <p className="text-xs text-slate-400">Competencies Met</p>
-          <p className="text-2xl font-mono font-extrabold text-accent-emerald mt-1">
-            {(gapAnalysis?.total_competencies || 0) - (highPriorityCount + mediumPriorityCount)}
+        <div className="p-4 rounded-xl bg-white border border-surface-border shadow-subtle space-y-1">
+          <p className="text-xs font-medium text-slate-500">Requirements Satisfied</p>
+          <p className="text-2xl font-bold font-mono text-emerald-700">
+            {Math.max(0, metCount)}
           </p>
-          <span className="text-[10px] text-slate-500">Meeting minimum requirements</span>
+          <p className="text-[11px] text-slate-500">Meeting target proficiency</p>
         </div>
       </div>
 
-      {/* Radar Chart & High-Level Breakdown */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-        <div className="lg:col-span-2 p-6 rounded-2xl bg-surface border border-surface-border space-y-4">
+      {/* Radar Chart & Simulation Action */}
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <div className="lg:col-span-2 p-5 rounded-xl bg-white border border-surface-border shadow-subtle space-y-4">
           <div className="flex justify-between items-center pb-3 border-b border-surface-border">
             <div>
-              <h3 className="text-sm font-bold text-white">Competency Alignment Radar</h3>
-              <p className="text-xs text-slate-400">Visual comparison of your level vs required proficiency</p>
+              <h3 className="text-sm font-semibold text-slate-900">Competency Alignment Radar</h3>
+              <p className="text-xs text-slate-500">Visual overlay of verified score versus role requirements</p>
             </div>
-            <span className="text-xs font-mono text-brand-cyan">{gapAnalysis?.career_title}</span>
+            <span className="text-xs font-semibold px-2.5 py-1 rounded-md bg-slate-100 text-slate-700">
+              {gapAnalysis?.career_title}
+            </span>
           </div>
+
           <div className="h-[280px]">
             <RadarCompetencyChart data={radarData} />
           </div>
         </div>
 
-        {/* Quick CTA to Simulation Lab */}
-        <div className="p-6 rounded-2xl bg-gradient-to-br from-surface to-surface-light border border-surface-border flex flex-col justify-between space-y-6">
+        {/* Simulation Callout */}
+        <div className="p-5 rounded-xl bg-primary-50/70 border border-primary-100 shadow-subtle flex flex-col justify-between space-y-4">
           <div className="space-y-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-brand-cyan">
-              Simulation Recommendation
-            </span>
-            <h3 className="text-lg font-bold text-white">Bridge the gap with What-If simulations</h3>
-            <p className="text-xs text-slate-400 leading-relaxed">
-              Curious how fast your readiness score increases if you dedicate 40 hours to mastering{' '}
-              <strong className="text-brand-cyan">Machine Learning</strong> or <strong className="text-brand-cyan">PyTorch</strong>?
-            </p>
+            <div className="w-8 h-8 rounded-lg bg-primary-600 text-white flex items-center justify-center">
+              <Cpu className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="text-sm font-bold text-slate-900">Simulate Skill Remediation</h3>
+              <p className="text-xs text-slate-600 mt-1 leading-relaxed">
+                Test how dedicating focused learning hours or completing portfolio projects will close these specific bottlenecks and increase your readiness.
+              </p>
+            </div>
           </div>
 
           <Link
             to="/simulation"
-            className="w-full py-3 rounded-xl text-xs font-bold bg-brand-cyan text-slate-950 hover:bg-brand-cyan/90 transition-all flex items-center justify-center gap-2 shadow-glow-cyan"
+            className="w-full py-2.5 px-3 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white transition-colors flex items-center justify-center gap-2 shadow-subtle"
           >
-            <span>Simulate Skill Uplift Now</span>
-            <ArrowRight className="w-4 h-4 text-slate-950" />
+            <span>Launch Simulation Lab</span>
+            <ArrowRight className="w-3.5 h-3.5" />
           </Link>
         </div>
       </div>
 
-      {/* Detailed Skill Gap Cards with Filter */}
+      {/* Skill Gap Cards with Filter */}
       <div className="space-y-4">
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
           <div>
-            <h3 className="text-lg font-bold text-white">All Competencies & Gap Actions</h3>
-            <p className="text-xs text-slate-400">Detailed diagnostic across technical and soft skill benchmarks</p>
+            <h3 className="text-base font-semibold text-slate-900">Competency Diagnostic Breakdown</h3>
+            <p className="text-xs text-slate-500">Target proficiencies and recommended closure actions</p>
           </div>
 
-          <div className="flex items-center gap-2">
-            <Filter className="w-3.5 h-3.5 text-slate-400" />
-            <span className="text-xs text-slate-400">Filter:</span>
+          <div className="flex items-center gap-1.5">
+            <Filter className="w-3.5 h-3.5 text-slate-400 mr-1" />
+            <span className="text-xs text-slate-500 font-medium mr-1">Filter:</span>
             {['all', 'high', 'medium', 'low'].map((f) => (
               <button
                 key={f}
                 onClick={() => setFilterPriority(f)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-medium uppercase tracking-wider border transition-all ${
+                className={`px-2.5 py-1 rounded-lg text-xs font-medium uppercase tracking-wider transition-colors ${
                   filterPriority === f
-                    ? 'bg-brand-cyan/20 border-brand-cyan text-brand-cyan'
-                    : 'bg-surface-light border-surface-border text-slate-400 hover:text-white'
+                    ? 'bg-primary-50 text-primary-700 font-semibold border border-primary-200'
+                    : 'bg-white border border-slate-200 text-slate-600 hover:bg-slate-50'
                 }`}
               >
                 {f}

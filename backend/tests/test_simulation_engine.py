@@ -84,3 +84,4 @@ def test_compare_career_scenarios():
     comparison = CareerSimulationEngine.compare_career_scenarios(alex_skills, "ai-ml-engineer", scenarios)
     assert len(comparison["scenarios"]) == 2
     assert comparison["highest_readiness_scenario"] == "Scenario A: AI Path"
+

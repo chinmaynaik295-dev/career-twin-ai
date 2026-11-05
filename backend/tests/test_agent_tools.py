@@ -63,3 +63,4 @@ def test_all_eight_agent_tools():
     # Tool 8: recommend_projects
     t8 = AgentToolsRegistry.recommend_projects(user_skills, "ai-ml-engineer")
     assert len(t8["recommended_projects"]) > 0
+

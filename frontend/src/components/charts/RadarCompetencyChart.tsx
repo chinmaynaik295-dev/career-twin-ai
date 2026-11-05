@@ -23,42 +23,51 @@ interface Props {
 }
 
 export const RadarCompetencyChart: React.FC<Props> = ({ data, title, subtitle }) => {
+  if (!data || data.length === 0) {
+    return (
+      <div className="w-full h-full min-h-[250px] flex items-center justify-center text-xs text-slate-400 bg-surface-subtle rounded-xl border border-dashed border-surface-border">
+        No competency data available to plot
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full flex flex-col justify-between">
       {(title || subtitle) && (
         <div className="mb-2">
-          {title && <h3 className="text-sm font-semibold text-slate-100">{title}</h3>}
-          {subtitle && <p className="text-xs text-slate-400">{subtitle}</p>}
+          {title && <h3 className="text-sm font-semibold text-slate-900">{title}</h3>}
+          {subtitle && <p className="text-xs text-slate-500">{subtitle}</p>}
         </div>
       )}
 
       <div className="w-full h-[280px]">
         <ResponsiveContainer width="100%" height="100%">
           <RadarChart cx="50%" cy="50%" outerRadius="75%" data={data}>
-            <PolarGrid stroke="#1f2e4d" />
+            <PolarGrid stroke="#e2e8f0" strokeDasharray="3 3" />
             <PolarAngleAxis
               dataKey="skill"
-              tick={{ fill: '#94a3b8', fontSize: 11, fontFamily: 'Inter' }}
+              tick={{ fill: '#475569', fontSize: 11, fontFamily: 'Inter' }}
             />
             <PolarRadiusAxis
               angle={30}
               domain={[0, 5]}
-              tick={{ fill: '#64748b', fontSize: 10 }}
-              stroke="#1f2e4d"
+              tick={{ fill: '#94a3b8', fontSize: 10 }}
+              stroke="#e2e8f0"
             />
             <Radar
-              name="Your Current Level"
+              name="Current Proficiency"
               dataKey="user_level"
-              stroke="#38bdf8"
-              fill="#38bdf8"
-              fillOpacity={0.4}
+              stroke="#4f46e5"
+              fill="#4f46e5"
+              fillOpacity={0.25}
+              strokeWidth={2}
             />
             <Radar
-              name="Required Target Level"
+              name="Target Expectation"
               dataKey="target_level"
-              stroke="#818cf8"
-              fill="#818cf8"
-              fillOpacity={0.15}
+              stroke="#94a3b8"
+              fill="#cbd5e1"
+              fillOpacity={0.1}
               strokeDasharray="4 4"
             />
             <Tooltip
@@ -66,11 +75,11 @@ export const RadarCompetencyChart: React.FC<Props> = ({ data, title, subtitle })
                 if (active && payload && payload.length) {
                   const item = payload[0].payload as RadarDataPoint;
                   return (
-                    <div className="bg-surface border border-surface-border p-2.5 rounded-lg shadow-xl text-xs">
-                      <p className="font-bold text-white mb-1">{item.skill}</p>
-                      <p className="text-brand-cyan">Current: {item.user_level} / 5</p>
-                      <p className="text-brand-indigo">Target: {item.target_level} / 5</p>
-                      <p className="text-slate-400">
+                    <div className="bg-surface border border-surface-border p-3 rounded-lg shadow-elevation text-xs">
+                      <p className="font-bold text-slate-900 mb-1.5">{item.skill}</p>
+                      <p className="text-primary-600 font-semibold">Your Level: {item.user_level} / 5</p>
+                      <p className="text-slate-500">Required Target: {item.target_level} / 5</p>
+                      <p className="text-slate-400 text-[11px] mt-1 pt-1 border-t border-slate-100">
                         Gap: {Math.max(0, item.target_level - item.user_level)} pts
                       </p>
                     </div>
@@ -80,8 +89,8 @@ export const RadarCompetencyChart: React.FC<Props> = ({ data, title, subtitle })
               }}
             />
             <Legend
-              wrapperStyle={{ fontSize: 11, paddingTop: 10 }}
-              formatter={(value) => <span className="text-slate-300">{value}</span>}
+              wrapperStyle={{ fontSize: 11, paddingTop: 12 }}
+              formatter={(value) => <span className="text-slate-600 font-medium">{value}</span>}
             />
           </RadarChart>
         </ResponsiveContainer>

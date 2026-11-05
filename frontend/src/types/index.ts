@@ -126,9 +126,11 @@ export interface EvolutionEvent {
 export interface DigitalCareerTwin {
   user_id: string;
   name: string;
+  email?: string;
   institution: string;
   academic_year: string;
   degree: string;
+  education_background?: string;
   skills: Record<string, number>;
   soft_skills: string[];
   interests: string[];
@@ -141,6 +143,7 @@ export interface DigitalCareerTwin {
   certifications: string[];
   evolution_history: EvolutionEvent[];
   simulations_count: number;
+  has_twin_configured?: boolean;
   last_updated: string;
 }
 
@@ -156,3 +159,4 @@ export interface ChatMessage {
   provider?: string;
   timestamp: string;
 }
+

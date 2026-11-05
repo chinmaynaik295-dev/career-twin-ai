@@ -29,7 +29,7 @@ async def generate_roadmap(payload: RoadmapGenerateRequest, current_user: dict =
     }
 
     roadmaps_col = db.get_collection("roadmaps")
-    # Replace active roadmap or insert new
+    # Replace previous active roadmap for this user
     await roadmaps_col.delete_one({"user_id": user_id, "status": "active"})
     res = await roadmaps_col.insert_one(doc)
     doc["id"] = str(res.inserted_id)
@@ -41,28 +41,13 @@ async def get_current_roadmap(current_user: dict = Depends(get_current_user)):
     roadmaps_col = db.get_collection("roadmaps")
     roadmap = await roadmaps_col.find_one({"user_id": user_id, "status": "active"})
     if not roadmap:
-        # Generate default roadmap for AI/ML Engineer
-        profiles_col = db.get_collection("career_profiles")
-        profile = await profiles_col.find_one({"user_id": user_id}) or {}
-        skills = profile.get("skills", {"Python": 3, "Problem Solving": 3})
-        
-        roadmap_data = AgentToolsRegistry.generate_learning_roadmap(
-            user_skills=skills,
-            career_id="ai-ml-engineer",
-            target_weeks=8,
-            weekly_hours=10
-        )
-        doc = {
-            "user_id": user_id,
-            "created_at": datetime.now(timezone.utc).isoformat(),
-            "status": "active",
-            **roadmap_data
+        return {
+            "has_active_roadmap": False,
+            "roadmap": None
         }
-        res = await roadmaps_col.insert_one(doc)
-        doc["id"] = str(res.inserted_id)
-        return doc
 
     roadmap["id"] = str(roadmap.get("_id", ""))
+    roadmap["has_active_roadmap"] = True
     return roadmap
 
 @router.put("/task/{task_id}")
@@ -85,14 +70,12 @@ async def update_task_status(task_id: str, payload: TaskUpdateStatus, current_us
                 target_skill = m.get("focus_skill")
                 break
         if found_task:
-            # Check if all tasks in milestone are done
             m["is_completed"] = all(t.get("completed", False) for t in m.get("tasks", []))
             break
 
     if not found_task:
-        raise HTTPException(status_code=404, detail="Task ID not found in active roadmap.")
+        raise HTTPException(status_code=404, detail="Task not found in active roadmap.")
 
-    # Calculate overall roadmap progress
     total_tasks = sum(len(m.get("tasks", [])) for m in milestones)
     completed_tasks = sum(sum(1 for t in m.get("tasks", []) if t.get("completed", False)) for m in milestones)
     progress_pct = round((completed_tasks / max(1, total_tasks)) * 100, 1)
@@ -103,13 +86,12 @@ async def update_task_status(task_id: str, payload: TaskUpdateStatus, current_us
         {"$set": {"milestones": milestones, "progress_percentage": progress_pct}}
     )
 
-    # If completing a task with verified evidence, update digital twin
+    # When user marks task as completed with verified evidence, update digital twin
     if payload.completed and target_skill:
         profiles_col = db.get_collection("career_profiles")
         profile = await profiles_col.find_one({"user_id": user_id}) or {}
         current_skills = profile.get("skills", {})
         
-        # Incremental boost of +0.3 proficiency for verified task completion
         boost = 0.3
         new_val = min(5.0, round(current_skills.get(target_skill, 0.0) + boost, 1))
         current_skills[target_skill] = new_val
@@ -117,7 +99,7 @@ async def update_task_status(task_id: str, payload: TaskUpdateStatus, current_us
         evolution_entry = {
             "timestamp": datetime.now(timezone.utc).isoformat(),
             "event": f"Milestone Task Completed: {found_task['description']}",
-            "details": f"Proficiency in {target_skill} boosted to {new_val}/5 (+{boost}). Evidence: {payload.evidence or 'Self-verified'}"
+            "details": f"Proficiency in {target_skill} increased to {new_val}/5 (+{boost}). Evidence: {payload.evidence or 'Self-verified'}"
         }
 
         await profiles_col.update_one(

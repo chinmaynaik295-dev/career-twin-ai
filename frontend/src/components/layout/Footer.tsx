@@ -1,65 +1,73 @@
 import React from 'react';
-import { Sparkles, Globe, Shield, BookOpen, Briefcase, Award } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { Shield, BookOpen, Briefcase, Lock } from 'lucide-react';
 
 export const Footer: React.FC = () => {
   return (
-    <footer className="w-full border-t border-surface-border bg-surface/50 backdrop-blur-md pt-12 pb-8 mt-20">
+    <footer className="w-full border-t border-surface-border bg-surface pt-12 pb-8">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="grid grid-cols-1 md:grid-cols-4 gap-8 mb-10">
+        <div className="grid grid-cols-1 md:grid-cols-5 gap-8 mb-10">
           {/* Brand info */}
           <div className="md:col-span-2 space-y-4">
             <div className="flex items-center gap-2.5">
-              <div className="flex items-center justify-center w-8 h-8 rounded-lg bg-brand-cyan/20 border border-brand-cyan/40">
-                <Sparkles className="w-4 h-4 text-brand-cyan" />
+              <div className="w-8 h-8 rounded-lg bg-primary-600 flex items-center justify-center text-white font-bold text-sm shadow-subtle">
+                CT
               </div>
-              <span className="font-bold text-base text-white">
-                CareerTwin <span className="text-brand-cyan">AI</span>
+              <span className="font-semibold text-sm text-slate-900 tracking-tight">
+                CareerTwin <span className="text-primary-600 font-bold">AI</span>
               </span>
             </div>
-            <p className="text-xs text-slate-400 max-w-sm leading-relaxed">
-              An Advanced Agentic AI Digital Career Twin & Career Simulation Platform designed to help students,
-              graduates, and career-switchers experiment with learning decisions through transparent mathematical simulation.
+            <p className="text-xs text-slate-600 max-w-sm leading-relaxed">
+              CareerTwin AI provides precision digital career modeling, deterministic What-If simulation,
+              and agentic career guidance for engineering students, graduates, and professionals.
             </p>
-            <div className="flex items-center gap-4 pt-2">
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
-                <BookOpen className="w-3 h-3" /> SDG 4: Quality Education
-              </span>
-              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md text-[10px] font-medium bg-blue-500/10 text-blue-400 border border-blue-500/20">
-                <Briefcase className="w-3 h-3" /> SDG 8: Decent Work
+            <div className="flex items-center gap-3 pt-1 text-slate-600 text-xs">
+              <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-surface-subtle border border-surface-border font-medium">
+                <Lock className="w-3 h-3 text-slate-500" /> Enterprise-grade Data Isolation
               </span>
             </div>
           </div>
 
-          {/* Quick links */}
+          {/* Platform Columns */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-3">Core Modules</h4>
-            <ul className="space-y-2 text-xs text-slate-400">
-              <li><a href="/simulation" className="hover:text-brand-cyan transition-colors">What-If Simulation Lab</a></li>
-              <li><a href="/gaps" className="hover:text-brand-cyan transition-colors">Skill Gap Diagnostic Engine</a></li>
-              <li><a href="/mentor" className="hover:text-brand-cyan transition-colors">Agentic AI Career Mentor</a></li>
-              <li><a href="/roadmap" className="hover:text-brand-cyan transition-colors">Adaptive Roadmaps</a></li>
-              <li><a href="/evolution" className="hover:text-brand-cyan transition-colors">Digital Twin Evolution</a></li>
+            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Platform</h4>
+            <ul className="space-y-2 text-xs text-slate-600">
+              <li><Link to="/careers" className="hover:text-slate-900 transition-colors">Career Tracks</Link></li>
+              <li><Link to="/simulation" className="hover:text-slate-900 transition-colors">Simulation Engine</Link></li>
+              <li><Link to="/gaps" className="hover:text-slate-900 transition-colors">Skill Diagnostics</Link></li>
+              <li><Link to="/roadmap" className="hover:text-slate-900 transition-colors">Adaptive Roadmaps</Link></li>
+              <li><Link to="/mentor" className="hover:text-slate-900 transition-colors">AI Career Mentor</Link></li>
             </ul>
           </div>
 
-          {/* Architectural transparency note */}
           <div>
-            <h4 className="text-xs font-semibold text-slate-200 uppercase tracking-wider mb-3">Architecture & Ethics</h4>
-            <p className="text-[11px] text-slate-400 leading-relaxed mb-3">
-              CareerTwin AI uses transparent, deterministic Python evaluation formulas. Simulations are decision-support models and do not fabricate arbitrary employment guarantees.
+            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Resources</h4>
+            <ul className="space-y-2 text-xs text-slate-600">
+              <li><a href="#how-it-works" className="hover:text-slate-900 transition-colors">Methodology</a></li>
+              <li><a href="#tracks" className="hover:text-slate-900 transition-colors">Competency Datasets</a></li>
+              <li><a href="http://127.0.0.1:8000/docs" target="_blank" rel="noreferrer" className="hover:text-slate-900 transition-colors">API Documentation</a></li>
+              <li><a href="#security" className="hover:text-slate-900 transition-colors">Ethics & Fairness</a></li>
+            </ul>
+          </div>
+
+          {/* System & Trust */}
+          <div>
+            <h4 className="text-xs font-semibold text-slate-900 uppercase tracking-wider mb-3">Architecture</h4>
+            <p className="text-[11px] text-slate-600 leading-relaxed mb-3">
+              Built on deterministic mathematical scoring. We do not generate fabricated job predictions or arbitrary hiring probabilities.
             </p>
-            <span className="text-[10px] text-slate-500 font-mono">
+            <span className="text-[10px] text-slate-500 font-mono block">
               FastAPI • PyMongo • React 18 • Tool Calling
             </span>
           </div>
         </div>
 
-        <div className="border-t border-surface-border/60 pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-500 gap-3">
-          <p>© 2026 CareerTwin AI. Built for the Next-Generation Workforce.</p>
+        <div className="border-t border-surface-border pt-6 flex flex-col sm:flex-row items-center justify-between text-xs text-slate-600 gap-3">
+          <p>© {new Date().getFullYear()} CareerTwin AI. All rights reserved.</p>
           <div className="flex items-center gap-6">
-            <span className="hover:text-slate-300 transition-colors">Privacy & Security</span>
-            <span className="hover:text-slate-300 transition-colors">Documentation</span>
-            <span className="hover:text-slate-300 transition-colors">API v1.0.0</span>
+            <span className="hover:text-slate-900 transition-colors cursor-pointer">Privacy Policy</span>
+            <span className="hover:text-slate-900 transition-colors cursor-pointer">Terms of Service</span>
+            <span className="hover:text-slate-900 transition-colors cursor-pointer">Security Standards</span>
           </div>
         </div>
       </div>

@@ -115,11 +115,24 @@ class RuleBasedAgentEngine(LLMProvider):
                 break
 
         profile = user_context or {
-            "name": "Alex",
-            "skills": {"Python": 3, "C": 3, "Mathematics": 3, "SQL": 1, "Machine Learning": 1, "Linux": 1, "Networking": 1, "Problem Solving": 3},
-            "career_goals": ["ai-ml-engineer", "cybersecurity-engineer"]
+            "name": "Professional",
+            "skills": {},
+            "career_goals": []
         }
         skills = profile.get("skills", {})
+
+        # If user has not configured skills yet
+        if not skills:
+            reply = (
+                f"Hello **{profile.get('name', 'there')}**! I am your **CareerTwin AI Advisor**.\n\n"
+                f"Your Digital Career Twin does not have any competencies recorded yet.\n\n"
+                f"To unlock personalized readiness scores, skill gap diagnostics, and custom roadmaps, "
+                f"please complete your profile onboarding or rate your initial skills in the Digital Twin settings.\n\n"
+                f"In the meantime, feel free to ask me general questions about career tracks like **AI/ML Engineer**, "
+                f"**Cybersecurity Engineer**, or **Cloud Architecture**!"
+            )
+            return {"content": reply, "tool_executed": None, "provider": "rule-based-agent", "is_mock": False}
+
 
         # Tool 1: Profile & Compatibility intent
         if any(w in user_msg for w in ["which career", "suits my", "match my", "profile", "compatible", "where am i"]):
@@ -269,3 +282,4 @@ def get_llm_provider() -> LLMProvider:
             )
             
     return RuleBasedAgentEngine()
+

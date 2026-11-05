@@ -73,3 +73,4 @@ async def get_simulation_by_id(simulation_id: str, current_user: dict = Depends(
         raise HTTPException(status_code=404, detail="Simulation record not found.")
     item["id"] = str(item.get("_id", ""))
     return item
+

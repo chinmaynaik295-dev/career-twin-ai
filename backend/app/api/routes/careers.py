@@ -75,3 +75,4 @@ async def compare_careers(payload: CareerCompareRequest, current_user: dict = De
         "higher_readiness_career": c1["title"] if r1["score"] >= r2["score"] else c2["title"],
         "score_difference": round(abs(r1["score"] - r2["score"]), 1)
     }
+

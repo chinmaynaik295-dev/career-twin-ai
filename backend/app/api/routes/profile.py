@@ -13,26 +13,26 @@ async def get_my_profile(current_user: dict = Depends(get_current_user)):
     profiles_col = db.get_collection("career_profiles")
     profile = await profiles_col.find_one({"user_id": user_id})
     if not profile:
-        # Generate default profile for this user
         profile = {
             "user_id": user_id,
-            "name": current_user.get("name", "Student"),
-            "institution": "University of Engineering",
-            "academic_year": "Second year",
-            "degree": "B.Tech Computer Science",
-            "skills": {"Python": 3, "Problem Solving": 3},
-            "soft_skills": ["Problem Solving"],
-            "interests": ["Artificial Intelligence"],
-            "career_goals": ["ai-ml-engineer"],
+            "name": current_user.get("name", ""),
+            "institution": "",
+            "academic_year": "",
+            "degree": "",
+            "skills": {},
+            "soft_skills": [],
+            "interests": [],
+            "career_goals": [],
             "projects": [],
             "certifications": [],
             "evolution_history": []
         }
         await profiles_col.insert_one(profile)
 
-    # Compute live career readiness metrics across goals
     skills = profile.get("skills", {})
-    goals = profile.get("career_goals", ["ai-ml-engineer"])
+    goals = profile.get("career_goals", [])
+    
+    # Compute live career readiness metrics across user's goals
     readiness_by_career = {}
     for gid in goals:
         career = get_career_by_id(gid)
@@ -51,10 +51,10 @@ async def create_or_replace_profile(payload: ProfileCreate, current_user: dict =
     
     doc = {
         "user_id": user_id,
-        "name": payload.name,
-        "institution": payload.institution,
-        "academic_year": payload.academic_year,
-        "degree": payload.degree,
+        "name": payload.name or current_user.get("name", ""),
+        "institution": payload.institution or "",
+        "academic_year": payload.academic_year or "",
+        "degree": payload.degree or "",
         "skills": payload.skills,
         "soft_skills": payload.soft_skills,
         "interests": payload.interests,
@@ -62,25 +62,36 @@ async def create_or_replace_profile(payload: ProfileCreate, current_user: dict =
         "projects": payload.projects,
         "certifications": payload.certifications,
         "updated_at": datetime.now(timezone.utc).isoformat(),
-        "evolution_history": [
+    }
+    
+    # Check if first time setup
+    existing = await profiles_col.find_one({"user_id": user_id})
+    if existing and existing.get("evolution_history"):
+        doc["evolution_history"] = existing.get("evolution_history")
+    else:
+        doc["evolution_history"] = [
             {
                 "timestamp": datetime.now(timezone.utc).isoformat(),
-                "event": "Onboarding Complete — Twin Initialized",
-                "details": f"Twin initialized with {len(payload.skills)} skills and {len(payload.career_goals)} career goals."
+                "event": "Digital Career Twin Configured",
+                "details": f"Twin initialized with {len(payload.skills)} skills and {len(payload.career_goals)} target career tracks."
             }
         ]
-    }
+
     await profiles_col.update_one({"user_id": user_id}, {"$set": doc}, upsert=True)
-    return {"message": "Digital Twin created successfully.", "profile": doc}
+    return {"message": "Digital Twin updated successfully.", "profile": doc}
 
 @router.put("/me")
 async def update_profile(payload: ProfileUpdate, current_user: dict = Depends(get_current_user)):
     user_id = current_user["id"]
     profiles_col = db.get_collection("career_profiles")
+    users_col = db.get_collection("users")
     
     update_data = {k: v for k, v in payload.model_dump().items() if v is not None}
     update_data["updated_at"] = datetime.now(timezone.utc).isoformat()
     
+    if payload.name:
+        await users_col.update_one({"_id": user_id}, {"$set": {"name": payload.name}})
+
     await profiles_col.update_one({"user_id": user_id}, {"$set": update_data})
     updated = await profiles_col.find_one({"user_id": user_id})
     return {"message": "Profile updated successfully.", "profile": updated}

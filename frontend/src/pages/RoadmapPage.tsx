@@ -1,9 +1,11 @@
 import React, { useState, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { api } from '../services/api';
 import { LearningRoadmap, CareerPath, DigitalCareerTwin } from '../types';
 import { 
   Map, CheckCircle2, Circle, Clock, Target, Sparkles, 
-  RefreshCw, Check, ShieldCheck, ChevronDown, ChevronUp, ArrowRight 
+  RefreshCw, Check, ShieldCheck, ChevronDown, ChevronUp, ArrowRight,
+  Calendar, Award, BookOpen, AlertCircle, X
 } from 'lucide-react';
 
 export const RoadmapPage: React.FC = () => {
@@ -14,9 +16,10 @@ export const RoadmapPage: React.FC = () => {
   const [weeksDuration, setWeeksDuration] = useState<number>(8);
   const [weeklyHours, setWeeklyHours] = useState<number>(10);
   const [loading, setLoading] = useState<boolean>(true);
+  const [generating, setGenerating] = useState<boolean>(false);
   const [updatingTaskId, setUpdatingTaskId] = useState<string | null>(null);
   const [evidenceModalTask, setEvidenceModalTask] = useState<string | null>(null);
-  const [evidenceText, setEvidenceText] = useState<string>('Completed coding exercises and pushed to GitHub repo');
+  const [evidenceText, setEvidenceText] = useState<string>('Completed module exercises and pushed commits to repository');
 
   useEffect(() => {
     const init = async () => {
@@ -29,8 +32,10 @@ export const RoadmapPage: React.FC = () => {
         setRoadmap(roadmapData);
         setCareers(careersData);
         setTwin(twinData);
-        if (roadmapData.career_id) {
+        if (roadmapData?.career_id) {
           setSelectedCareerId(roadmapData.career_id);
+        } else if (twinData?.career_goals && twinData.career_goals.length > 0) {
+          setSelectedCareerId(twinData.career_goals[0]);
         }
       } catch (e) {
         console.error(e);
@@ -42,7 +47,7 @@ export const RoadmapPage: React.FC = () => {
   }, []);
 
   const handleGenerateCustomRoadmap = async () => {
-    setLoading(true);
+    setGenerating(true);
     try {
       const generated = await api.generateRoadmap({
         career_id: selectedCareerId,
@@ -53,18 +58,18 @@ export const RoadmapPage: React.FC = () => {
     } catch (e) {
       console.error(e);
     } finally {
-      setLoading(false);
+      setGenerating(false);
     }
   };
 
   const handleToggleTask = async (taskId: string, currentStatus: boolean) => {
     if (!currentStatus) {
-      // Prompt for verified evidence before checking
+      // Prompt for verification evidence before marking completed
       setEvidenceModalTask(taskId);
       return;
     }
 
-    // Uncheck
+    // Uncheck task
     setUpdatingTaskId(taskId);
     try {
       await api.updateTask(taskId, false);
@@ -74,7 +79,15 @@ export const RoadmapPage: React.FC = () => {
           tasks: m.tasks.map((t) => (t.id === taskId ? { ...t, completed: false } : t)),
           is_completed: false
         }));
-        setRoadmap({ ...roadmap, milestones: updatedMilestones });
+        const totalTasks = updatedMilestones.reduce((acc, m) => acc + m.tasks.length, 0);
+        const doneTasks = updatedMilestones.reduce((acc, m) => acc + m.tasks.filter((t) => t.completed).length, 0);
+        const newProgress = Math.round((doneTasks / Math.max(1, totalTasks)) * 100);
+
+        setRoadmap({
+          ...roadmap,
+          milestones: updatedMilestones,
+          progress_percentage: newProgress
+        });
       }
     } finally {
       setUpdatingTaskId(null);
@@ -109,39 +122,43 @@ export const RoadmapPage: React.FC = () => {
     }
   };
 
-  if (loading || !roadmap) {
+  if (loading) {
     return (
-      <div className="min-h-[70vh] flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-brand-cyan animate-spin" />
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="flex flex-col items-center gap-3">
+          <RefreshCw className="w-6 h-6 text-primary-600 animate-spin" />
+          <p className="text-xs text-slate-500 font-medium">Loading roadmap plan...</p>
+        </div>
       </div>
     );
   }
 
-  const totalTasksCount = roadmap.milestones.reduce((acc, m) => acc + m.tasks.length, 0);
-  const completedTasksCount = roadmap.milestones.reduce((acc, m) => acc + m.tasks.filter((t) => t.completed).length, 0);
-  const progressPct = roadmap.progress_percentage ?? Math.round((completedTasksCount / Math.max(1, totalTasksCount)) * 100);
+  const hasConfiguredTwin = twin && Object.keys(twin.skills || {}).length > 0;
+  const totalTasksCount = roadmap?.milestones?.reduce((acc, m) => acc + m.tasks.length, 0) || 0;
+  const completedTasksCount = roadmap?.milestones?.reduce((acc, m) => acc + m.tasks.filter((t) => t.completed).length, 0) || 0;
+  const progressPct = roadmap?.progress_percentage ?? Math.round((completedTasksCount / Math.max(1, totalTasksCount)) * 100);
 
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-8">
-      {/* Top Header */}
-      <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 pb-6 border-b border-surface-border">
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-6 border-b border-surface-border">
         <div>
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-accent-emerald/10 border border-emerald-500/30 text-emerald-400 text-xs font-semibold mb-2">
-            <Map className="w-3.5 h-3.5" />
-            <span>Adaptive Milestone Execution</span>
+          <div className="flex items-center gap-2 text-xs font-semibold text-primary-700 mb-1">
+            <Map className="w-4 h-4" />
+            <span>Structured Milestone Execution</span>
           </div>
-          <h1 className="text-3xl font-extrabold text-white tracking-tight">Personalized Learning Roadmap</h1>
-          <p className="text-xs text-slate-400 mt-1">
-            Weekly milestones dynamically sequenced to bridge your high-priority skill gaps in {roadmap.career_title}
+          <h1 className="text-2xl font-bold text-slate-900 tracking-tight">Learning Roadmap</h1>
+          <p className="text-xs text-slate-500 mt-1 max-w-2xl">
+            Sequenced weekly milestones and verified micro-tasks tailored to systematically eliminate your measured competency gaps.
           </p>
         </div>
 
-        {/* Custom Duration & Career Controls */}
-        <div className="flex items-center gap-2">
+        {/* Generate / Configure Controls */}
+        <div className="flex flex-wrap items-center gap-2">
           <select
             value={selectedCareerId}
             onChange={(e) => setSelectedCareerId(e.target.value)}
-            className="px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-medium text-white focus:outline-none focus:border-brand-cyan"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-subtle focus:outline-none"
           >
             {careers.map((c) => (
               <option key={c.id} value={c.id}>
@@ -153,7 +170,7 @@ export const RoadmapPage: React.FC = () => {
           <select
             value={weeksDuration}
             onChange={(e) => setWeeksDuration(Number(e.target.value))}
-            className="px-3 py-2 rounded-xl bg-surface border border-surface-border text-xs font-medium text-white focus:outline-none"
+            className="px-2.5 py-1.5 rounded-lg bg-white border border-slate-200 text-xs font-medium text-slate-800 shadow-subtle focus:outline-none"
           >
             <option value={4}>4 Weeks</option>
             <option value={8}>8 Weeks</option>
@@ -162,161 +179,221 @@ export const RoadmapPage: React.FC = () => {
 
           <button
             onClick={handleGenerateCustomRoadmap}
-            className="px-4 py-2 rounded-xl text-xs font-bold bg-brand-cyan text-slate-950 hover:bg-brand-cyan/90 transition-all shadow-glow-cyan"
+            disabled={generating}
+            className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-subtle transition-colors flex items-center gap-1.5 disabled:opacity-50"
           >
-            Regenerate
+            {generating ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : <Sparkles className="w-3.5 h-3.5" />}
+            <span>{roadmap ? 'Regenerate' : 'Generate Roadmap'}</span>
           </button>
         </div>
       </div>
 
-      {/* Progress & Readiness Projection Header Card */}
-      <div className="p-6 rounded-2xl bg-surface border border-surface-border grid grid-cols-1 md:grid-cols-4 gap-6 items-center">
-        <div className="space-y-1">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-brand-cyan">Roadmap Completion</span>
-          <p className="text-2xl font-mono font-extrabold text-white">{progressPct}%</p>
-          <div className="w-full bg-surface-border h-2 rounded-full overflow-hidden mt-2">
-            <div
-              className="bg-accent-emerald h-full transition-all duration-500 rounded-full"
-              style={{ width: `${progressPct}%` }}
-            />
+      {!roadmap ? (
+        /* Empty State */
+        <div className="p-10 rounded-xl bg-white border border-surface-border text-center space-y-4 shadow-subtle max-w-2xl mx-auto my-8">
+          <div className="w-12 h-12 rounded-xl bg-primary-50 text-primary-700 flex items-center justify-center mx-auto">
+            <Map className="w-6 h-6" />
           </div>
-          <p className="text-[10px] text-slate-500 pt-1">{completedTasksCount} of {totalTasksCount} tasks verified</p>
-        </div>
-
-        <div className="space-y-1 border-t md:border-t-0 md:border-l border-surface-border/60 md:pl-6">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Total Duration</span>
-          <p className="text-xl font-bold text-white">{roadmap.target_weeks} Weeks</p>
-          <p className="text-xs text-amber-400">~{roadmap.total_estimated_hours} Total Hours</p>
-        </div>
-
-        <div className="space-y-1 border-t md:border-t-0 md:border-l border-surface-border/60 md:pl-6">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">Current Measured</span>
-          <p className="text-xl font-mono font-bold text-slate-300">{roadmap.initial_readiness}%</p>
-          <p className="text-[10px] text-slate-500">Starting baseline</p>
-        </div>
-
-        <div className="space-y-1 border-t md:border-t-0 md:border-l border-surface-border/60 md:pl-6">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-accent-emerald">Target Projected</span>
-          <p className="text-xl font-mono font-bold text-accent-emerald">
-            {roadmap.projected_readiness}%
-          </p>
-          <p className="text-[10px] text-emerald-400">+{Math.round((roadmap.projected_readiness - roadmap.initial_readiness) * 10) / 10} pts uplift</p>
-        </div>
-      </div>
-
-      {/* Verified Evidence Dialog if active */}
-      {evidenceModalTask && (
-        <div className="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="max-w-md w-full p-6 rounded-2xl bg-surface border border-brand-cyan/40 shadow-2xl space-y-4">
-            <div className="flex items-center gap-2 text-brand-cyan">
-              <ShieldCheck className="w-5 h-5" />
-              <h3 className="text-sm font-bold text-white">Record Verified Milestone Proof</h3>
-            </div>
-            <p className="text-xs text-slate-300 leading-relaxed">
-              Your Digital Career Twin updates verified competency levels only when supported by tangible learning evidence (e.g. repo URL or summary).
+          <div>
+            <h3 className="text-base font-bold text-slate-900">No Active Learning Roadmap</h3>
+            <p className="text-xs text-slate-500 mt-1 leading-relaxed">
+              Generate an adaptive step-by-step milestone plan structured to bridge the exact competency gaps identified for your target career track.
             </p>
-            <div>
-              <label className="block text-xs font-medium text-slate-400 mb-1">Evidence / Notes</label>
-              <textarea
-                rows={3}
-                value={evidenceText}
-                onChange={(e) => setEvidenceText(e.target.value)}
-                className="w-full p-2.5 rounded-xl bg-surface-light border border-surface-border text-xs text-white focus:outline-none focus:border-brand-cyan"
-              />
+          </div>
+
+          <div className="pt-2">
+            <button
+              onClick={handleGenerateCustomRoadmap}
+              disabled={generating}
+              className="px-4 py-2 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-subtle transition-colors inline-flex items-center gap-2"
+            >
+              {generating ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Sparkles className="w-4 h-4" />}
+              <span>Generate My 8-Week Roadmap</span>
+            </button>
+          </div>
+        </div>
+      ) : (
+        /* Active Roadmap Content */
+        <div className="space-y-6">
+          {/* Progress & Projection Card */}
+          <div className="p-5 rounded-xl bg-white border border-surface-border shadow-subtle grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 items-center">
+            <div className="space-y-1.5">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Overall Progress
+              </span>
+              <p className="text-2xl font-bold font-mono text-primary-700">{progressPct}%</p>
+              <div className="w-full bg-slate-100 h-2 rounded-full overflow-hidden">
+                <div
+                  className="bg-primary-600 h-full transition-all duration-300 rounded-full"
+                  style={{ width: `${progressPct}%` }}
+                />
+              </div>
+              <p className="text-[11px] text-slate-500 pt-0.5">
+                {completedTasksCount} of {totalTasksCount} tasks verified
+              </p>
             </div>
-            <div className="flex justify-end gap-2 pt-2">
-              <button
-                onClick={() => setEvidenceModalTask(null)}
-                className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-400 hover:text-white"
-              >
-                Cancel
-              </button>
-              <button
-                onClick={handleConfirmVerifiedTask}
-                className="px-4 py-1.5 rounded-lg text-xs font-bold bg-brand-cyan text-slate-950 hover:bg-brand-cyan/90 shadow-sm"
-              >
-                Confirm & Boost Twin (+0.3 pts)
-              </button>
+
+            <div className="space-y-1 sm:border-l sm:border-slate-200 sm:pl-6">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Duration & Effort
+              </span>
+              <p className="text-xl font-bold text-slate-900">{roadmap.target_weeks} Weeks</p>
+              <p className="text-xs text-slate-500">~{roadmap.total_estimated_hours} total learning hours</p>
             </div>
+
+            <div className="space-y-1 lg:border-l lg:border-slate-200 lg:pl-6">
+              <span className="text-[11px] font-semibold text-slate-500 uppercase tracking-wider">
+                Starting Baseline
+              </span>
+              <p className="text-xl font-bold font-mono text-slate-700">{roadmap.initial_readiness}%</p>
+              <p className="text-xs text-slate-500">Twin readiness at start</p>
+            </div>
+
+            <div className="space-y-1 lg:border-l lg:border-slate-200 lg:pl-6">
+              <span className="text-[11px] font-semibold text-emerald-800 uppercase tracking-wider">
+                Projected Readiness
+              </span>
+              <p className="text-xl font-bold font-mono text-emerald-700">{roadmap.projected_readiness}%</p>
+              <p className="text-xs text-emerald-600 font-medium">
+                +{Math.round((roadmap.projected_readiness - roadmap.initial_readiness) * 10) / 10} pts projected uplift
+              </p>
+            </div>
+          </div>
+
+          {/* Verification Evidence Dialog */}
+          {evidenceModalTask && (
+            <div className="fixed inset-0 z-50 bg-slate-900/40 backdrop-blur-xs flex items-center justify-center p-4">
+              <div className="max-w-md w-full p-6 rounded-xl bg-white border border-surface-border shadow-elevation space-y-4">
+                <div className="flex items-center justify-between pb-2 border-b border-surface-border">
+                  <div className="flex items-center gap-2 text-primary-700 font-semibold text-sm">
+                    <ShieldCheck className="w-4 h-4" />
+                    <span>Record Verified Task Evidence</span>
+                  </div>
+                  <button
+                    onClick={() => setEvidenceModalTask(null)}
+                    className="p-1 text-slate-400 hover:text-slate-600 rounded-md"
+                  >
+                    <X className="w-4 h-4" />
+                  </button>
+                </div>
+
+                <p className="text-xs text-slate-600 leading-relaxed">
+                  Your Digital Career Twin updates verified competency metrics when tasks are confirmed with tangible evidence (e.g. project notes or repository URL).
+                </p>
+
+                <div>
+                  <label className="block text-xs font-medium text-slate-700 mb-1">
+                    Proof / Work Summary
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={evidenceText}
+                    onChange={(e) => setEvidenceText(e.target.value)}
+                    className="w-full p-2.5 rounded-lg bg-slate-50 border border-slate-200 text-xs text-slate-900 focus:outline-none focus:ring-2 focus:ring-primary-500"
+                  />
+                </div>
+
+                <div className="flex justify-end gap-2 pt-2">
+                  <button
+                    onClick={() => setEvidenceModalTask(null)}
+                    className="px-3 py-1.5 rounded-lg text-xs font-medium text-slate-600 hover:bg-slate-100"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    onClick={handleConfirmVerifiedTask}
+                    className="px-3.5 py-1.5 rounded-lg text-xs font-semibold bg-primary-600 hover:bg-primary-700 text-white shadow-subtle"
+                  >
+                    Confirm & Update Twin
+                  </button>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Milestones Vertical Timeline List */}
+          <div className="space-y-4">
+            {roadmap.milestones.map((milestone) => (
+              <div
+                key={milestone.week_number}
+                className={`p-5 rounded-xl bg-white border transition-all shadow-subtle ${
+                  milestone.is_completed ? 'border-emerald-200 bg-emerald-50/20' : 'border-surface-border'
+                }`}
+              >
+                <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-3 border-b border-surface-border">
+                  <div className="flex items-center gap-3">
+                    <div
+                      className={`w-7 h-7 rounded-lg flex items-center justify-center font-mono font-bold text-xs ${
+                        milestone.is_completed
+                          ? 'bg-emerald-600 text-white'
+                          : 'bg-primary-50 text-primary-700 border border-primary-200'
+                      }`}
+                    >
+                      {milestone.is_completed ? <Check className="w-3.5 h-3.5 stroke-[3]" /> : `W${milestone.week_number}`}
+                    </div>
+                    <div>
+                      <h3 className="text-sm font-bold text-slate-900">{milestone.title}</h3>
+                      <p className="text-xs text-slate-500">
+                        Focus Competency: <strong className="text-slate-700">{milestone.focus_skill}</strong>
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-mono text-slate-600 px-2 py-0.5 rounded bg-slate-50 border border-slate-200">
+                      ~{milestone.estimated_hours}h effort
+                    </span>
+                    {milestone.is_completed && (
+                      <span className="text-xs text-emerald-700 font-semibold px-2 py-0.5 rounded bg-emerald-50 border border-emerald-200">
+                        Milestone Completed
+                      </span>
+                    )}
+                  </div>
+                </div>
+
+                {/* Tasks */}
+                <div className="pt-3 space-y-2">
+                  {milestone.tasks.map((task) => (
+                    <div
+                      key={task.id}
+                      onClick={() => handleToggleTask(task.id, task.completed)}
+                      className={`p-3 rounded-lg border flex items-center justify-between cursor-pointer transition-colors ${
+                        task.completed
+                          ? 'bg-slate-50/60 border-slate-200 text-slate-400'
+                          : 'bg-white border-slate-200 hover:border-slate-300 text-slate-700'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3">
+                        <button
+                          type="button"
+                          className={`w-4 h-4 rounded flex items-center justify-center transition-colors ${
+                            task.completed
+                              ? 'bg-emerald-600 text-white'
+                              : 'border border-slate-300 hover:border-primary-600'
+                          }`}
+                        >
+                          {task.completed && <Check className="w-3 h-3 stroke-[3]" />}
+                        </button>
+                        <span
+                          className={`text-xs ${
+                            task.completed ? 'line-through text-slate-400' : 'text-slate-800 font-medium'
+                          }`}
+                        >
+                          {task.description}
+                        </span>
+                      </div>
+
+                      <span className="text-[11px] font-mono text-slate-400 shrink-0 ml-3">
+                        {task.hours}h
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       )}
-
-      {/* Milestones Vertical Timeline List */}
-      <div className="space-y-6">
-        {roadmap.milestones.map((milestone) => (
-          <div
-            key={milestone.week_number}
-            className={`p-6 rounded-2xl bg-surface border transition-all ${
-              milestone.is_completed ? 'border-emerald-500/30 bg-emerald-950/10' : 'border-surface-border'
-            }`}
-          >
-            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-surface-border/60">
-              <div className="flex items-center gap-3">
-                <div
-                  className={`w-8 h-8 rounded-xl flex items-center justify-center font-mono font-bold text-xs ${
-                    milestone.is_completed
-                      ? 'bg-accent-emerald text-slate-950'
-                      : 'bg-surface-light border border-surface-border text-brand-cyan'
-                  }`}
-                >
-                  {milestone.is_completed ? <Check className="w-4 h-4 stroke-[3]" /> : `W${milestone.week_number}`}
-                </div>
-                <div>
-                  <h3 className="text-sm font-bold text-white">{milestone.title}</h3>
-                  <p className="text-xs text-slate-400">Target Competency: <strong className="text-brand-cyan">{milestone.focus_skill}</strong></p>
-                </div>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <span className="text-xs font-mono text-amber-400 px-2 py-0.5 rounded bg-surface-light border border-surface-border">
-                  ~{milestone.estimated_hours} Hours
-                </span>
-                {milestone.is_completed && (
-                  <span className="text-xs text-accent-emerald font-semibold px-2 py-0.5 rounded bg-emerald-500/10 border border-emerald-500/20">
-                    Milestone Completed
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Tasks in Milestone */}
-            <div className="pt-4 space-y-2.5">
-              {milestone.tasks.map((task) => (
-                <div
-                  key={task.id}
-                  onClick={() => handleToggleTask(task.id, task.completed)}
-                  className={`p-3 rounded-xl border flex items-center justify-between cursor-pointer transition-all ${
-                    task.completed
-                      ? 'bg-surface-light/40 border-emerald-500/20 text-slate-400'
-                      : 'bg-surface-light border-surface-border hover:border-slate-500 text-slate-200'
-                  }`}
-                >
-                  <div className="flex items-center gap-3">
-                    <button
-                      type="button"
-                      className={`w-5 h-5 rounded-md flex items-center justify-center transition-colors ${
-                        task.completed
-                          ? 'bg-accent-emerald text-slate-950'
-                          : 'border border-slate-500 hover:border-brand-cyan'
-                      }`}
-                    >
-                      {task.completed && <Check className="w-3.5 h-3.5 stroke-[3]" />}
-                    </button>
-                    <span className={`text-xs ${task.completed ? 'line-through text-slate-500' : 'text-slate-200 font-medium'}`}>
-                      {task.description}
-                    </span>
-                  </div>
-
-                  <span className="text-[11px] font-mono text-slate-500 shrink-0 ml-3">
-                    {task.hours} hrs
-                  </span>
-                </div>
-              ))}
-            </div>
-          </div>
-        ))}
-      </div>
     </div>
   );
 };

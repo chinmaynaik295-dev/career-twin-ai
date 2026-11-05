@@ -11,7 +11,7 @@ router = APIRouter(prefix="/twin", tags=["Digital Career Twin"])
 class TwinUpdatePayload(BaseModel):
     task_title: str
     skill_boosts: Dict[str, float]
-    evidence: Optional[str] = "Student self-verification with project link / repository"
+    evidence: Optional[str] = "Self-verified milestone completion"
 
 @router.get("")
 async def get_digital_twin(current_user: dict = Depends(get_current_user)):
@@ -20,9 +20,9 @@ async def get_digital_twin(current_user: dict = Depends(get_current_user)):
     profile = await profiles_col.find_one({"user_id": user_id}) or {}
 
     skills = profile.get("skills", {})
-    goals = profile.get("career_goals", ["ai-ml-engineer", "cybersecurity-engineer"])
+    goals = profile.get("career_goals", [])
 
-    # Calculate readiness across goals
+    # Calculate readiness across user's selected goals
     readiness_map = {}
     for gid in goals:
         career = get_career_by_id(gid)
@@ -34,19 +34,21 @@ async def get_digital_twin(current_user: dict = Depends(get_current_user)):
                 "category": career.get("category", "")
             }
 
-    primary_goal = goals[0] if goals else "ai-ml-engineer"
-    primary_career = get_career_by_id(primary_goal)
-    primary_readiness = readiness_map.get(primary_goal, {}).get("score", 0.0)
+    primary_goal = goals[0] if goals else None
+    primary_career = get_career_by_id(primary_goal) if primary_goal else None
+    primary_readiness = readiness_map.get(primary_goal, {}).get("score", 0.0) if primary_goal else 0.0
 
-    # Missing skills for primary career
+    # Missing skills for primary career if defined
     gaps_result = CareerSimulationEngine.calculate_skill_gaps(skills, primary_goal) if primary_career else {}
+
+    simulations_count = len(await db.get_collection("simulations").find({"user_id": user_id}))
 
     return {
         "user_id": user_id,
-        "name": profile.get("name", current_user.get("name", "Student")),
-        "institution": profile.get("institution", "National Institute of Engineering"),
-        "academic_year": profile.get("academic_year", "Second year"),
-        "degree": profile.get("degree", "B.Tech Computer Science & Engineering"),
+        "name": profile.get("name") or current_user.get("name", "User"),
+        "institution": profile.get("institution", ""),
+        "academic_year": profile.get("academic_year", ""),
+        "degree": profile.get("degree", ""),
         "skills": skills,
         "soft_skills": profile.get("soft_skills", []),
         "interests": profile.get("interests", []),
@@ -54,12 +56,13 @@ async def get_digital_twin(current_user: dict = Depends(get_current_user)):
         "primary_career": primary_career,
         "primary_readiness_score": primary_readiness,
         "readiness_by_career": readiness_map,
-        "top_missing_skills": [g for g in gaps_result.get("skill_gaps", []) if g["gap"] > 0][:4],
+        "top_missing_skills": [g for g in gaps_result.get("skill_gaps", []) if g["gap"] > 0][:5],
         "projects": profile.get("projects", []),
         "certifications": profile.get("certifications", []),
         "evolution_history": profile.get("evolution_history", []),
-        "simulations_count": len(await db.get_collection("simulations").find({"user_id": user_id})),
-        "last_updated": profile.get("updated_at", datetime.now(timezone.utc).isoformat())
+        "simulations_count": simulations_count,
+        "has_twin_configured": len(skills) > 0 or len(goals) > 0,
+        "last_updated": profile.get("updated_at", profile.get("created_at", datetime.now(timezone.utc).isoformat()))
     }
 
 @router.put("/update")
@@ -68,7 +71,7 @@ async def update_twin_progress(payload: TwinUpdatePayload, current_user: dict = 
     profiles_col = db.get_collection("career_profiles")
     profile = await profiles_col.find_one({"user_id": user_id})
     if not profile:
-        raise HTTPException(status_code=404, detail="Profile not found.")
+        raise HTTPException(status_code=404, detail="Career profile not found. Please complete initial setup.")
 
     skills = dict(profile.get("skills", {}))
     improvements = {}
@@ -82,7 +85,7 @@ async def update_twin_progress(payload: TwinUpdatePayload, current_user: dict = 
     evolution_entry = {
         "timestamp": datetime.now(timezone.utc).isoformat(),
         "event": payload.task_title,
-        "details": f"Verified skill boost: {', '.join([f'{k}: +{v}' for k, v in payload.skill_boosts.items()])}. Evidence: {payload.evidence}",
+        "details": f"Competency uplift: {', '.join([f'{k} (+{v})' for k, v in payload.skill_boosts.items()])}. Proof: {payload.evidence}",
         "improvements": improvements
     }
 
@@ -95,7 +98,7 @@ async def update_twin_progress(payload: TwinUpdatePayload, current_user: dict = 
     )
 
     return {
-        "message": "Digital Twin successfully evolved with verified progress.",
+        "message": "Digital Twin updated successfully with verified progress.",
         "updated_skills": skills,
         "evolution_entry": evolution_entry
     }
@@ -109,18 +112,18 @@ async def get_twin_evolution(current_user: dict = Depends(get_current_user)):
     current_skills = profile.get("skills", {})
     history = profile.get("evolution_history", [])
 
-    # Calculate baseline vs current readiness
-    primary_goal = profile.get("career_goals", ["ai-ml-engineer"])[0]
-    career = get_career_by_id(primary_goal)
+    goals = profile.get("career_goals", [])
+    primary_goal = goals[0] if goals else None
+    career = get_career_by_id(primary_goal) if primary_goal else None
     current_readiness = 0.0
-    if career:
+    if career and current_skills:
         r = CareerSimulationEngine.calculate_career_readiness(current_skills, career.get("required_skills", []))
         current_readiness = r["score"]
 
     return {
         "user_id": user_id,
-        "name": profile.get("name"),
-        "primary_career": career["title"] if career else primary_goal,
+        "name": profile.get("name") or current_user.get("name", "User"),
+        "primary_career": career["title"] if career else "None configured",
         "current_readiness_score": current_readiness,
         "current_skills": current_skills,
         "evolution_timeline": history,
